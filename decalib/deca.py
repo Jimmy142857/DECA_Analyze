@@ -53,32 +53,33 @@ class DECA(nn.Module):
         set_rasterizer(self.cfg.rasterizer_type)
         self.render = SRenderY(self.image_size, obj_filename=model_cfg.topology_path, uv_size=model_cfg.uv_size, rasterizer_type=self.cfg.rasterizer_type).to(self.device)
         # face mask for rendering details
-        mask = imread(model_cfg.face_eye_mask_path).astype(np.float32)/255.; mask = torch.from_numpy(mask[:,:,0])[None,None,:,:].contiguous()
-        self.uv_face_eye_mask = F.interpolate(mask, [model_cfg.uv_size, model_cfg.uv_size]).to(self.device)
-        mask = imread(model_cfg.face_mask_path).astype(np.float32)/255.; mask = torch.from_numpy(mask[:,:,0])[None,None,:,:].contiguous()
+        mask = imread(model_cfg.face_eye_mask_path).astype(np.float32)/255.; mask = torch.from_numpy(mask[:,:,0])[None,None,:,:].contiguous()   # 读取mask模板图片，进行归一化，维度转化为(1，1，256，256)（albedo map生成？）
+        self.uv_face_eye_mask = F.interpolate(mask, [model_cfg.uv_size, model_cfg.uv_size]).to(self.device)                                     # 将图片长宽采样到指定的大小
+        mask = imread(model_cfg.face_mask_path).astype(np.float32)/255.; mask = torch.from_numpy(mask[:,:,0])[None,None,:,:].contiguous()       # 同理对第二张mask 进行处理
         self.uv_face_mask = F.interpolate(mask, [model_cfg.uv_size, model_cfg.uv_size]).to(self.device)
         # displacement correction
-        fixed_dis = np.load(model_cfg.fixed_displacement_path)
+        fixed_dis = np.load(model_cfg.fixed_displacement_path)                                                                                  # 读取位移贴图npy数据
         self.fixed_uv_dis = torch.tensor(fixed_dis).float().to(self.device)
         # mean texture
-        mean_texture = imread(model_cfg.mean_tex_path).astype(np.float32)/255.; mean_texture = torch.from_numpy(mean_texture.transpose(2,0,1))[None,:,:,:].contiguous()
+        mean_texture = imread(model_cfg.mean_tex_path).astype(np.float32)/255.                                                                  # 读取mean texture,归一化，维度转化为(1,3,512,512)
+        mean_texture = torch.from_numpy(mean_texture.transpose(2,0,1))[None,:,:,:].contiguous()
         self.mean_texture = F.interpolate(mean_texture, [model_cfg.uv_size, model_cfg.uv_size]).to(self.device)
-        # dense mesh template, for save detail mesh
-        self.dense_template = np.load(model_cfg.dense_template_path, allow_pickle=True, encoding='latin1').item()
+        # dense mesh template, for save detail mesh                                                                                             
+        self.dense_template = np.load(model_cfg.dense_template_path, allow_pickle=True, encoding='latin1').item()                               # 数组元素读取并转化为字典
 
     def _create_model(self, model_cfg):
         # set up parameters
-        self.n_param = model_cfg.n_shape+model_cfg.n_tex+model_cfg.n_exp+model_cfg.n_pose+model_cfg.n_cam+model_cfg.n_light
+        self.n_param = model_cfg.n_shape+model_cfg.n_tex+model_cfg.n_exp+model_cfg.n_pose+model_cfg.n_cam+model_cfg.n_light                     # 参数维度取初值
         self.n_detail = model_cfg.n_detail
         self.n_cond = model_cfg.n_exp + 3 # exp + jaw pose
         self.num_list = [model_cfg.n_shape, model_cfg.n_tex, model_cfg.n_exp, model_cfg.n_pose, model_cfg.n_cam, model_cfg.n_light]
-        self.param_dict = {i:model_cfg.get('n_' + i) for i in model_cfg.param_list}
+        self.param_dict = {i:model_cfg.get('n_' + i) for i in model_cfg.param_list}                                                             # 将六个参数维度存为字典
 
         # encoders
-        self.E_flame = ResnetEncoder(outsize=self.n_param).to(self.device) 
+        self.E_flame = ResnetEncoder(outsize=self.n_param).to(self.device)                                                                      # 编码器得到236维输出
         self.E_detail = ResnetEncoder(outsize=self.n_detail).to(self.device)
         # decoders
-        self.flame = FLAME(model_cfg).to(self.device)
+        self.flame = FLAME(model_cfg).to(self.device)                                                                                           # 配置文件以及通用模型读入
         if model_cfg.use_tex:
             self.flametex = FLAMETex(model_cfg).to(self.device)
         self.D_detail = Generator(latent_dim=self.n_detail+self.n_cond, out_channels=1, out_scale=model_cfg.max_z, sample_mode = 'bilinear').to(self.device)

@@ -18,7 +18,7 @@ def main(cfg):
     os.makedirs(os.path.join(cfg.output_dir, cfg.train.vis_dir), exist_ok=True)
     os.makedirs(os.path.join(cfg.output_dir, cfg.train.val_vis_dir), exist_ok=True)
     with open(os.path.join(cfg.output_dir, cfg.train.log_dir, 'full_config.yaml'), 'w') as f:
-        yaml.dump(cfg, f, default_flow_style=False)
+        yaml.dump(cfg, f, default_flow_style=False)                                              # 将python字典写入yaml文件
     shutil.copy(cfg.cfg_file, os.path.join(cfg.output_dir, 'config.yaml'))
     
     # cudnn related setting
