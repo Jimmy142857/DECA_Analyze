@@ -11,17 +11,21 @@ from torch.utils.data import Dataset, DataLoader, ConcatDataset
 
 class NoWDataset(Dataset):
     def __init__(self, ring_elements=6, crop_size=224, scale=1.6):
-        folder = '/ps/scratch/yfeng/other-github/now_evaluation/data/NoW_Dataset'
-        self.data_path = os.path.join(folder, 'imagepathsvalidation.txt')
+        # folder = '/ps/scratch/yfeng/other-github/now_evaluation/data/NoW_Dataset'
+        # self.data_path = os.path.join(folder, 'imagepathsvalidation.txt')
+        # with open(self.data_path) as f:
+        #     self.data_lines = f.readlines()
+
+        # self.imagefolder = os.path.join(folder, 'final_release_version', 'iphone_pictures')
+        # self.bbxfolder = os.path.join(folder, 'final_release_version', 'detected_face')
+
+        self.data_path = 'C:/Users/Administrator/Desktop/Now/imagepathsvalidation.txt'
         with open(self.data_path) as f:
-            self.data_lines = f.readlines()
+            self.data_lines = f.readlines()        
+        self.imagefolder = 'C:/Users/Administrator/Desktop/Now/NoW_Dataset/final_release_version/iphone_pictures/validation_set/1-10'
+        self.bbxfolder = 'C:/Users/Administrator/Desktop/Now/NoW_Dataset/final_release_version/detected_face/validation_set/1-10'
 
-        self.imagefolder = os.path.join(folder, 'final_release_version', 'iphone_pictures')
-        self.bbxfolder = os.path.join(folder, 'final_release_version', 'detected_face')
 
-        # self.data_path = '/ps/scratch/face2d3d/ringnetpp/eccv/test_data/evaluation/NoW_Dataset/final_release_version/test_image_paths_ring_6_elements.npy'
-        # self.imagepath = '/ps/scratch/face2d3d/ringnetpp/eccv/test_data/evaluation/NoW_Dataset/final_release_version/iphone_pictures/'
-        # self.bbxpath = '/ps/scratch/face2d3d/ringnetpp/eccv/test_data/evaluation/NoW_Dataset/final_release_version/detected_face/'
         self.crop_size = crop_size
         self.scale = scale
             
@@ -54,6 +58,6 @@ class NoWDataset(Dataset):
         dst_image = dst_image.transpose(2,0,1)
         return {'image': torch.tensor(dst_image).float(),
                 'imagename': self.data_lines[index].strip().replace('.jpg', ''),
-                # 'tform': tform,
-                # 'original_image': torch.tensor(image.transpose(2,0,1)).float(),
+                'tform': torch.tensor(tform.params).float(),
+                'original_image': torch.tensor(image.transpose(2,0,1)).float(),
                 }
