@@ -39,10 +39,10 @@ def main(args):
     os.makedirs(savefolder, exist_ok=True)
 
     # load test images 
-    # testdata = datasets.TestData(args.inputpath, iscrop=args.iscrop, face_detector=args.detector, sample_step=args.sample_step)
+    testdata = datasets.TestData(args.inputpath, iscrop=args.iscrop, face_detector=args.detector, sample_step=args.sample_step)
     
     # 使用 NoW 中的图片作测试
-    testdata = now.NoWDataset()
+    # testdata = now.NoWDataset()
 
     # run DECA
     deca_cfg.model.use_tex = args.useTex
