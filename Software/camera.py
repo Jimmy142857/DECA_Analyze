@@ -88,7 +88,7 @@ class CameraApp(QWidget):
         # 启动计时器，每10毫秒更新一次相机图像
         self.timer.start(10)
 
-        # 用于三维重建的输入图片路径
+        # 初始化建模输入图片路径
         self.input_path = None
 
         # 设置布局
@@ -123,7 +123,10 @@ class CameraApp(QWidget):
         self.photo_label.setPixmap(QPixmap.fromImage(qt_image))
 
         # 已拍摄的图像
-        self.captured_image = image             # 保存拍摄的照片
+        self.captured_image = image
+
+        # 重置建模输入路径
+        self.input_path = None
 
     def update_camera_image(self):
         """ 刷新相机界面 """

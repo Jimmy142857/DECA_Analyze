@@ -1,4 +1,6 @@
 import sys
+import os
+import subprocess
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QSplitter, QSpacerItem, QSizePolicy
 from PyQt5.QtCore import Qt
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -62,8 +64,31 @@ class IntegratedApp(QWidget):
         self.setLayout(main_layout)
 
     def reconstruct_3d(self):
-        """ 触发三维重建的代码 """
-        print("进行三维重建")
+        """ 三维重建 """
+        # 输入图片路径
+        input_path = self.camera_app.input_path
+
+        if not input_path:
+            print("没有选择图像或已拍摄图像未保存，请稍后重试！")
+            return
+
+        # 获取文件名和输出文件夹
+        image_directory = os.path.dirname(input_path)
+        file_name = os.path.splitext(os.path.basename(input_path))[0]
+        output_folder = os.path.join(image_directory, file_name)
+
+        # demo_reconstruct.py的位置
+        demo_script_path = "C:\\Users\\Administrator\\Desktop\\DECA_Analyze\\demos\\demo_reconstruct.py"
+
+        # 构建命令行命令
+        command = f"python {demo_script_path} -i {input_path} -s {output_folder} --saveObj True"
+
+        # 运行命令
+        try:
+            subprocess.run(command, shell=True, check=True)
+            print("三维重建完成")
+        except subprocess.CalledProcessError as e:
+            print(f"三维重建失败，错误信息: {e}")
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
