@@ -23,7 +23,7 @@ class CameraApp(QWidget):
 
         # 创建拍照按钮
         self.capture_button = QPushButton("拍照", self)
-        self.capture_button.setFixedSize(210, 40)           # 设置按钮宽度为318
+        self.capture_button.setFixedSize(210, 40)             # 设置按钮宽度为210
         self.capture_button.clicked.connect(self.capture_image)
 
         # 创建保存按钮
@@ -87,6 +87,9 @@ class CameraApp(QWidget):
 
         # 启动计时器，每10毫秒更新一次相机图像
         self.timer.start(10)
+
+        # 用于三维重建的输入图片路径
+        self.input_path = None
 
         # 设置布局
         self.setLayout(main_layout)
@@ -173,6 +176,8 @@ class CameraApp(QWidget):
             file_path = folder_path + ".jpg"
             cv2.imwrite(file_path, cv2.cvtColor(self.captured_image, cv2.COLOR_RGB2BGR))
             print(f'图像已保存到：{file_path}')
+            # 更新重建输入路径
+            self.input_path = file_path
 
     def select_photo(self):
         """ 选择照片 """
@@ -189,9 +194,13 @@ class CameraApp(QWidget):
             qt_image = QImage(image.data, image.shape[1], image.shape[0], image.shape[1] * 3, QImage.Format_RGB888)
             # 显示照片
             self.photo_label.setPixmap(QPixmap.fromImage(qt_image))
+            print(f'已选取图像：{file_path}')
 
-        # 保存已加载的图像
-        self.captured_image = image
+            # 保存已加载的图像
+            self.captured_image = image
+            # 更新重建输入路径
+            self.input_path = file_path
+
 
     def detect_faces(self, frame):
         """ 在图像中检测人脸 """
