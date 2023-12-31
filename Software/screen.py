@@ -1,7 +1,7 @@
 import sys
 import os
 import subprocess
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QSplitter, QSpacerItem, QSizePolicy
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QSplitter, QSpacerItem, QSizePolicy, QMessageBox
 from PyQt5.QtCore import Qt
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from model import ModelViewer
@@ -69,7 +69,7 @@ class IntegratedApp(QWidget):
         input_path = self.camera_app.input_path
 
         if not input_path:
-            print("没有选择图像或已拍摄图像未保存，请稍后重试！")
+            QMessageBox.warning(self, "警告", "没有选择图像或已拍摄图像未保存，请稍后重试！")
             return
 
         # 获取文件名和输出文件夹
@@ -86,9 +86,10 @@ class IntegratedApp(QWidget):
         # 运行命令
         try:
             subprocess.run(command, shell=True, check=True)
-            print("三维重建完成")
+            QMessageBox.information(self, "成功", "三维重建完成")
         except subprocess.CalledProcessError as e:
-            print(f"三维重建失败，错误信息: {e}")
+            QMessageBox.critical(self, "错误", f"三维重建失败，错误信息: {e}")
+            
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

@@ -1,7 +1,7 @@
 import sys
 import cv2
 import os
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QFileDialog
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QFileDialog, QMessageBox
 from PyQt5.QtGui import QImage, QPixmap, QColor, QPainter, QFont
 from PyQt5.QtCore import QTimer, Qt, QLibraryInfo
 
@@ -107,7 +107,7 @@ class CameraApp(QWidget):
         """ 拍照按钮功能 """
         # 判断相机是否正常
         if not self.camera_available:
-            print("No camera avaliable!")
+            QMessageBox.warning(self, "警告", "No camera avaliable!")
             return
         
         # 读取当前帧
@@ -178,7 +178,7 @@ class CameraApp(QWidget):
         if folder_path:
             file_path = folder_path + ".jpg"
             cv2.imwrite(file_path, cv2.cvtColor(self.captured_image, cv2.COLOR_RGB2BGR))
-            print(f'图像已保存到：{file_path}')
+            QMessageBox.information(self, "成功", f'图像已保存到：{file_path}')
             # 更新重建输入路径
             self.input_path = file_path
 
@@ -197,7 +197,7 @@ class CameraApp(QWidget):
             qt_image = QImage(image.data, image.shape[1], image.shape[0], image.shape[1] * 3, QImage.Format_RGB888)
             # 显示照片
             self.photo_label.setPixmap(QPixmap.fromImage(qt_image))
-            print(f'已选取图像：{file_path}')
+            QMessageBox.information(self, "成功", f'已选取图像：{file_path}')
 
             # 保存已加载的图像
             self.captured_image = image
