@@ -8,6 +8,9 @@ from model import ModelViewer
 from camera import CameraApp
 
 class IntegratedApp(QWidget):
+    # 三维界面初始时需要占位符
+    # 多线程  
+
     def __init__(self):
         super().__init__()
 
