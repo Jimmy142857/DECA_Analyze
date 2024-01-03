@@ -1,8 +1,10 @@
 import sys
 import os
 import subprocess
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QSplitter, QSpacerItem, QSizePolicy, QMessageBox
 from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QSplitter, 
+    QSpacerItem, QSizePolicy, QMessageBox)
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from model import ModelViewer
 from camera import CameraApp
@@ -89,7 +91,7 @@ class IntegratedApp(QWidget):
         # 运行命令
         try:
             subprocess.run(command, shell=True, check=True)
-            QMessageBox.information(self, "成功", "三维重建完成")
+            QMessageBox.information(self, "成功", "三维重建完成，请在文件夹中查看")
         except subprocess.CalledProcessError as e:
             QMessageBox.critical(self, "错误", f"三维重建失败，错误信息: {e}")
             

@@ -1,5 +1,10 @@
 import os, sys, vtk
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QFrame, QVBoxLayout, QHBoxLayout, QPushButton, QFileDialog, QLineEdit
+from PyQt5.QtWidgets import (
+    QApplication, QMainWindow, QWidget, QFrame, 
+    QVBoxLayout, QHBoxLayout, QPushButton, QFileDialog, 
+    QLabel,
+)
+from PyQt5.QtGui import QPixmap, QColor
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from vtkmodules.all import vtkTextActor
 
@@ -62,6 +67,7 @@ class ModelViewer(QWidget):
 
 
     def onRenderWindowModified(self, obj, event):
+        """ 文本位置调整 """
         # 获取渲染窗口的大小
         width, height = self.vtkWidget.GetRenderWindow().GetSize()
 
