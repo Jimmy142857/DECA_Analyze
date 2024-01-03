@@ -10,7 +10,6 @@ from model import ModelViewer
 from camera import CameraApp
 
 class IntegratedApp(QWidget):
-    # 三维界面初始时需要占位符
     # 多线程  
 
     def __init__(self):
@@ -78,12 +77,15 @@ class IntegratedApp(QWidget):
             return
 
         # 获取文件名和输出文件夹
+        input_path = os.path.normpath(input_path)
         image_directory = os.path.dirname(input_path)
         file_name = os.path.splitext(os.path.basename(input_path))[0]
         output_folder = os.path.join(image_directory, file_name)
 
+        self.model_viewer.cleanModel()                                               # 清除现有模型
+        
         # demo_reconstruct.py的位置
-        demo_script_path = "C:\\Users\\Administrator\\Desktop\\DECA_Analyze\\demos\\demo_reconstruct.py"
+        demo_script_path = os.path.normpath("C:\\Users\\Administrator\\Desktop\\DECA_Analyze\\demos\\demo_reconstruct.py")
 
         # 构建命令行命令
         command = f"python {demo_script_path} -i {input_path} -s {output_folder} --saveObj True"
@@ -91,7 +93,9 @@ class IntegratedApp(QWidget):
         # 运行命令
         try:
             subprocess.run(command, shell=True, check=True)
-            QMessageBox.information(self, "成功", "三维重建完成，请在文件夹中查看")
+            obj_path = os.path.join(output_folder, file_name, file_name + '.obj')    # 糙模型路径
+            self.model_viewer.loadModel(obj_path)                                    # 加载模型
+            QMessageBox.information(self, "成功", "三维重建完成!")
         except subprocess.CalledProcessError as e:
             QMessageBox.critical(self, "错误", f"三维重建失败，错误信息: {e}")
             

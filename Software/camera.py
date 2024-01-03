@@ -15,8 +15,8 @@ class CameraApp(QWidget):
         super().__init__()
 
         # 设置窗口标题和大小
-        self.setWindowTitle("相机应用")
-        self.setGeometry(100, 100, 640, 480)
+        # self.setWindowTitle("相机应用")
+        # self.setGeometry(100, 100, 640, 480)
 
         # 创建布局
         main_layout = QVBoxLayout()

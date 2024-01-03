@@ -64,7 +64,10 @@ class ModelViewer(QWidget):
 
         # 连接渲染窗口大小变化事件
         self.vtkWidget.GetRenderWindow().AddObserver(vtk.vtkCommand.ModifiedEvent, self.onRenderWindowModified)
-
+      
+        # 启动交互器
+        self.iren.Initialize()
+        self.iren.Start()
 
     def onRenderWindowModified(self, obj, event):
         """ 文本位置调整 """
@@ -93,13 +96,14 @@ class ModelViewer(QWidget):
     def loadModel(self, file_path : str):
         """  加载三维模型, coarse含贴图, detail不含贴图 """
         # 获取 obj 文件所在的目录
+        file_path = os.path.normpath(file_path)                 # 路径分隔符统一化
         obj_directory = os.path.dirname(file_path)
 
         # 设置当前工作目录为 obj 文件所在的目录
         os.chdir(obj_directory)
 
         # 模型文件名
-        model_name = file_path.split("/")[-1][:-4]
+        model_name = file_path.split(os.path.sep)[-1][:-4]
 
         # mtl文件名
         mtl_path = file_path[:-3] + "mtl"
