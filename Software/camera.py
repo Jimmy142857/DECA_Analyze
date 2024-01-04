@@ -1,7 +1,10 @@
 import sys
 import cv2
 import os
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout, QHBoxLayout,
+    QPushButton, QLabel, QFileDialog, QMessageBox
+)
 from PyQt5.QtGui import QImage, QPixmap, QColor, QPainter, QFont
 from PyQt5.QtCore import QTimer, Qt, QLibraryInfo
 
