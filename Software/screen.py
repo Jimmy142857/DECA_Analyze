@@ -11,9 +11,10 @@ from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from model import ModelViewer
 from camera import CameraApp
 
-# 定义一个新的线程
+
 class ReconstructionThread(QThread):
-    finished = pyqtSignal(str, str, str)            # 信号，用于在操作完成时发出通知
+    """三维重建线程"""
+    finished = pyqtSignal(str, str, str)            # 结束信号，用于在操作完成时发出通知
 
     def __init__(self, input_path, output_folder, file_name):
         super().__init__()
@@ -36,8 +37,8 @@ class ReconstructionThread(QThread):
         self.finished.emit("", self.output_folder, self.file_name)
         
 
-# 主界面类
 class IntegratedApp(QWidget):
+    """ 主界面 """
     def __init__(self):
         super().__init__()
         # 添加重建成员变量
@@ -72,16 +73,16 @@ class IntegratedApp(QWidget):
         button_layout.addItem(spacer)
 
         # 中间添加一个按钮
-        reconstruct_button = QPushButton("三维重建", self)
-        reconstruct_button.clicked.connect(self.reconstruct_3d)
+        self.reconstruct_button = QPushButton("三维重建", self)
+        self.reconstruct_button.clicked.connect(self.reconstruct_3d)
 
         # 按钮字体设置
-        font = reconstruct_button.font()
+        font = self.reconstruct_button.font()
         font.setPointSize(16)               # 设置字体大小为16
         font.setBold(True)                  # 设置字体加粗
-        reconstruct_button.setFont(font)
+        self.reconstruct_button.setFont(font)
 
-        button_layout.addWidget(reconstruct_button)
+        button_layout.addWidget(self.reconstruct_button)
 
         # 创建一个弹簧，使得按钮位于两个模块中间
         spacer = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
@@ -112,6 +113,9 @@ class IntegratedApp(QWidget):
 
         self.model_viewer.cleanModel()  # 清除现有模型
 
+        # 禁用按钮
+        self.reconstruct_button.setEnabled(False)
+
         # 创建重建线程
         self.reconstruction_thread = ReconstructionThread(input_path, output_folder, file_name)
         self.reconstruction_thread.finished.connect(self.reconstruction_finished)  # 连接信号
@@ -120,6 +124,10 @@ class IntegratedApp(QWidget):
         self.reconstruction_thread.start()
 
     def reconstruction_finished(self, error_message, output_folder, file_name):
+        """ 重建结束 """
+        # 恢复按钮状态
+        self.reconstruct_button.setEnabled(True)
+
         if error_message:
             QMessageBox.critical(self, "错误", error_message)
         else:
@@ -127,6 +135,7 @@ class IntegratedApp(QWidget):
             obj_path = os.path.join(output_folder, file_name, file_name + '.obj')  # 糙模型路径
             self.model_viewer.loadModel(obj_path)  # 加载模型
             QMessageBox.information(self, "成功", "三维重建完成!")
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
