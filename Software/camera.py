@@ -196,6 +196,13 @@ class CameraApp(QWidget):
         if file_path:
             # 读取照片
             image = cv2.cvtColor(cv2.imread(file_path), cv2.COLOR_BGR2RGB)
+
+            # 检查图像尺寸，如果太大，进行缩小
+            max_width, max_height = 640, 480
+            if image.shape[0] > max_height or image.shape[1] > max_width:
+                scale_factor = min(max_width / image.shape[1], max_height / image.shape[0])
+                image = cv2.resize(image, (int(image.shape[1] * scale_factor), int(image.shape[0] * scale_factor)))
+
             # 将图像转换为Qt图像
             qt_image = QImage(image.data, image.shape[1], image.shape[0], image.shape[1] * 3, QImage.Format_RGB888)
             # 显示照片

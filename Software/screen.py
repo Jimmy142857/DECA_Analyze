@@ -46,7 +46,7 @@ class IntegratedApp(QWidget):
 
         # 设置窗口标题和大小
         self.setWindowTitle("Picture to Model")
-        self.setGeometry(100, 100, 1280, 960)
+        self.setGeometry(100, 100, 1440, 960)
 
         # 创建主布局
         main_layout = QHBoxLayout()
