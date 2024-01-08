@@ -1,6 +1,7 @@
 import sys
 import cv2
 import os
+import face_alignment
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QFileDialog, QMessageBox
@@ -13,6 +14,7 @@ os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = QLibraryInfo.location(            # 
     QLibraryInfo.PluginsPath
 )
 
+
 class CameraApp(QWidget):
     def __init__(self):
         super().__init__()
@@ -24,9 +26,25 @@ class CameraApp(QWidget):
         # 创建布局
         main_layout = QVBoxLayout()
 
+        # 人脸检测开关按钮
+        self.face_detection_enabled = True
+        self.face_detection_button = QPushButton("人脸检测", self)
+        self.face_detection_button.setFixedSize(310, 40)
+        self.face_detection_button.setCheckable(True)
+        self.face_detection_button.setChecked(True)         # 默认开启人脸检测
+        self.face_detection_button.clicked.connect(self.toggle_face_detection)
+
+        # 关键点检测开关按钮
+        self.lmk_detection_enable = False
+        self.lmk_detection_button = QPushButton("关键点检测", self)
+        self.lmk_detection_button.setFixedSize(310, 40)
+        self.lmk_detection_button.setCheckable(True)
+        self.lmk_detection_button.setChecked(False)        # 默认关闭关键点检测
+        self.lmk_detection_button.clicked.connect(self.toggle_lmk_detection)
+
         # 创建拍照按钮
         self.capture_button = QPushButton("拍照", self)
-        self.capture_button.setFixedSize(210, 40)             # 设置按钮宽度为210
+        self.capture_button.setFixedSize(210, 40)          # 设置按钮宽度为210
         self.capture_button.clicked.connect(self.capture_image)
 
         # 创建保存按钮
@@ -45,7 +63,7 @@ class CameraApp(QWidget):
         # 创建用于显示照片的标签
         self.photo_label = QLabel(self)
         placeholder_pixmap = QPixmap(640, 480)
-        placeholder_pixmap.fill(Qt.lightGray)                   # 初始时使用浅灰色填充
+        placeholder_pixmap.fill(Qt.lightGray)               # 初始时使用浅灰色填充
         self.photo_label.setPixmap(placeholder_pixmap)
 
         # 创建水平布局，包含相机图像标签和照片标签
@@ -55,6 +73,11 @@ class CameraApp(QWidget):
         photo_layout = QHBoxLayout()
         photo_layout.addWidget(self.photo_label)
 
+        # 创建水平布局，包含人脸检测按钮、关键点检测按钮
+        detection_layout = QHBoxLayout()
+        detection_layout.addWidget(self.face_detection_button)
+        detection_layout.addWidget(self.lmk_detection_button)
+
         # 创建水平布局，包含保存按钮、拍照按钮、选择按钮
         input_layout = QHBoxLayout()
         input_layout.addWidget(self.capture_button)        
@@ -63,11 +86,13 @@ class CameraApp(QWidget):
 
         # 将布局添加到垂直布局
         main_layout.addLayout(camera_layout)
+        main_layout.addLayout(detection_layout)
         main_layout.addLayout(photo_layout)
         main_layout.addLayout(input_layout)
 
-        # 设置水平布局对齐方式为左对齐
+        # 设置按钮的对齐方式为左对齐
         input_layout.setAlignment(Qt.AlignLeft)
+        detection_layout.setAlignment(Qt.AlignLeft)
 
         # 创建计时器，用于定期刷新显示的相机图像
         self.timer = QTimer(self)
@@ -76,6 +101,7 @@ class CameraApp(QWidget):
         # 初始化相机
         self.cap = None                                                 # 初始化相机
         self.camera_available = False                                   # 新增标志
+        
         camera_index = self.find_camera_index()                         # 获取相机id
         if camera_index is not None:
             self.cap = cv2.VideoCapture(camera_index)
@@ -88,8 +114,11 @@ class CameraApp(QWidget):
         # 创建人脸检测器
         self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
-        # 启动计时器，每10毫秒更新一次相机图像
-        self.timer.start(10)
+        # 创建人脸关键点检测器
+        self.fa = face_alignment.FaceAlignment(landmarks_type = face_alignment.LandmarksType.TWO_D, flip_input=False)
+
+        # 启动计时器，每20毫秒更新一次相机图像
+        self.timer.start(20)
 
         # 初始化建模输入图片路径
         self.input_path = None
@@ -152,14 +181,28 @@ class CameraApp(QWidget):
         # 定期刷新显示的相机图像
         ret, frame = self.cap.read()
 
-        # 在图像中检测人脸
-        faces = self.detect_faces(frame)
+        # 在处理帧之前检查帧是否为空
+        if not ret or frame is None:
+            return
 
-        # 在图像上绘制人脸框
-        for (x, y, w, h) in faces:
-            # 调整人脸框的大小
-            x, y, w, h = int(x + 0.1 * w), int(y + 0.1 * h), int(0.8 * w), int(0.8 * h)
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
+        # 根据人脸检测状态来进行相应处理
+        if self.face_detection_enabled:
+            # 在图像中检测人脸
+            faces = self.detect_faces(frame)
+            for (x, y, w, h) in faces:
+                # 绘制并调整人脸框的大小
+                x, y, w, h = int(x + 0.1 * w), int(y + 0.1 * h), int(0.8 * w), int(0.8 * h)
+                cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
+        
+        if self.lmk_detection_enable:
+            # 在图像中检测人脸关键点
+            landmarks = self.fa.get_landmarks(frame)
+            if landmarks is not None:
+                # 在图像上绘制关键点
+                for point in landmarks[0]:
+                    cv2.circle(frame, tuple(map(int, point)), 2, (0, 255, 0), -1)
+            else:
+                QMessageBox.warning(self, "提示", "未检测到关键点！")
 
         # 将图像转换为Qt图像
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -214,12 +257,21 @@ class CameraApp(QWidget):
             # 更新重建输入路径
             self.input_path = file_path
 
-
     def detect_faces(self, frame):
         """ 在图像中检测人脸 """
+        # 将帧转换为灰度图像
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        # 使用人脸级联检测器检测人脸
         faces = self.face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
         return faces
+
+    def toggle_face_detection(self):
+        """ 切换人脸检测状态 """
+        self.face_detection_enabled = not self.face_detection_enabled
+
+    def toggle_lmk_detection(self):
+        """ 切换关键点检测状态 """
+        self.lmk_detection_enable = not self.lmk_detection_enable
 
     def closeEvent(self, event):
         # 关闭窗口时释放相机资源
