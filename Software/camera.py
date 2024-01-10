@@ -1,7 +1,6 @@
-import sys
-import cv2
-import os
+import sys, cv2, os
 import face_alignment
+import numpy as np
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QFileDialog, QMessageBox
@@ -29,7 +28,7 @@ class CameraApp(QWidget):
         # 人脸检测开关按钮
         self.face_detection_enabled = True
         self.face_detection_button = QPushButton("人脸检测", self)
-        self.face_detection_button.setFixedSize(310, 40)
+        self.face_detection_button.setFixedSize(210, 40)
         self.face_detection_button.setCheckable(True)
         self.face_detection_button.setChecked(True)         # 默认开启人脸检测
         self.face_detection_button.clicked.connect(self.toggle_face_detection)
@@ -37,10 +36,18 @@ class CameraApp(QWidget):
         # 关键点检测开关按钮
         self.lmk_detection_enable = False
         self.lmk_detection_button = QPushButton("关键点检测", self)
-        self.lmk_detection_button.setFixedSize(310, 40)
+        self.lmk_detection_button.setFixedSize(210, 40)
         self.lmk_detection_button.setCheckable(True)
-        self.lmk_detection_button.setChecked(False)        # 默认关闭关键点检测
+        self.lmk_detection_button.setChecked(False)         # 默认关闭关键点检测
         self.lmk_detection_button.clicked.connect(self.toggle_lmk_detection)
+
+        # 关键点检测开关按钮
+        self.face_segmentation_enable = False
+        self.face_segmentation_button = QPushButton("人脸分割", self)
+        self.face_segmentation_button.setFixedSize(210, 40)
+        self.face_segmentation_button.setCheckable(True)
+        self.face_segmentation_button.setChecked(False)      # 默认关闭人脸分割
+        self.face_segmentation_button.clicked.connect(self.toggle_face_segmentation)
 
         # 创建拍照按钮
         self.capture_button = QPushButton("拍照", self)
@@ -77,6 +84,7 @@ class CameraApp(QWidget):
         detection_layout = QHBoxLayout()
         detection_layout.addWidget(self.face_detection_button)
         detection_layout.addWidget(self.lmk_detection_button)
+        detection_layout.addWidget(self.face_segmentation_button)
 
         # 创建水平布局，包含保存按钮、拍照按钮、选择按钮
         input_layout = QHBoxLayout()
@@ -185,7 +193,7 @@ class CameraApp(QWidget):
         if not ret or frame is None:
             return
 
-        # 根据人脸检测状态来进行相应处理
+        # 人脸检测开关
         if self.face_detection_enabled:
             # 在图像中检测人脸
             faces = self.detect_faces(frame)
@@ -194,6 +202,7 @@ class CameraApp(QWidget):
                 x, y, w, h = int(x + 0.1 * w), int(y + 0.1 * h), int(0.8 * w), int(0.8 * h)
                 cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
         
+        # 关键点检测开关
         if self.lmk_detection_enable:
             # 在图像中检测人脸关键点
             landmarks = self.fa.get_landmarks(frame)
@@ -202,7 +211,49 @@ class CameraApp(QWidget):
                 for point in landmarks[0]:
                     cv2.circle(frame, tuple(map(int, point)), 2, (0, 255, 0), -1)
             else:
-                QMessageBox.warning(self, "提示", "未检测到关键点！")
+                QMessageBox.warning(self, "提示", "未检测到人脸关键点，请看摄像头！")
+        
+        # 脸部分割开关
+        if self.face_segmentation_enable:
+            # 在图像中检测人脸关键点
+            landmarks = self.fa.get_landmarks(frame)
+            if landmarks is not None:
+                landmarks_points = landmarks[0]
+
+                # 获取眼睛、鼻子、嘴巴和眉毛的关键点坐标
+                left_eye_points = landmarks_points[36:42]
+                right_eye_points = landmarks_points[42:48]
+
+                left_eyebrow_points = landmarks_points[17:22]
+                right_eyebrow_points = landmarks_points[22:27]
+                
+                nose_points = landmarks_points[31:36]
+                nose_points = np.append(nose_points, [landmarks_points[27]], axis=0)
+
+                mouth_points = landmarks_points[48:68]
+
+                cheek_points = landmarks_points[0:17]
+                cheek_points = np.append(cheek_points, landmarks_points[26:16:-1], axis=0)
+
+                # 画出脸颊区域（浅蓝色 ）
+                self.draw_polygon(frame, cheek_points, color=(255, 255, 225))
+
+                # 画出眼睛区域（蓝色）
+                self.draw_polygon(frame, left_eye_points, color=(255, 0, 0))
+                self.draw_polygon(frame, right_eye_points, color=(255, 0, 0))
+
+                # 画出鼻子区域（红色）
+                self.draw_polygon(frame, nose_points, color=(0, 0, 255))
+
+                # 画出嘴巴区域（绿色）
+                self.draw_polygon(frame, mouth_points, color=(0, 255, 0))
+
+                # 画出眉毛区域（橙色）
+                self.draw_polygon(frame, left_eyebrow_points, color=(0, 140, 255))
+                self.draw_polygon(frame, right_eyebrow_points, color=(0, 140, 255))
+            else:
+                QMessageBox.warning(self, "提示", "无法进行面部分割，请看摄像头！")                
+            
 
         # 将图像转换为Qt图像
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -264,6 +315,12 @@ class CameraApp(QWidget):
         # 使用人脸级联检测器检测人脸
         faces = self.face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
         return faces
+    
+    def draw_polygon(self, frame, points, color):
+        """ 填充多边形 """
+        pts = np.array(points, np.int32)
+        pts = pts.reshape((-1, 1, 2))
+        cv2.fillPoly(frame, [pts], color)
 
     def toggle_face_detection(self):
         """ 切换人脸检测状态 """
@@ -272,6 +329,10 @@ class CameraApp(QWidget):
     def toggle_lmk_detection(self):
         """ 切换关键点检测状态 """
         self.lmk_detection_enable = not self.lmk_detection_enable
+
+    def toggle_face_segmentation(self):
+        """ 切换面部分割检测状态 """
+        self.face_segmentation_enable = not self.face_segmentation_enable
 
     def closeEvent(self, event):
         # 关闭窗口时释放相机资源
