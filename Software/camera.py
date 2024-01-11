@@ -80,7 +80,7 @@ class CameraApp(QWidget):
         photo_layout = QHBoxLayout()
         photo_layout.addWidget(self.photo_label)
 
-        # 创建水平布局，包含人脸检测按钮、关键点检测按钮
+        # 创建水平布局，包含人脸检测按钮、关键点检测按钮、人脸分割按钮
         detection_layout = QHBoxLayout()
         detection_layout.addWidget(self.face_detection_button)
         detection_layout.addWidget(self.lmk_detection_button)
