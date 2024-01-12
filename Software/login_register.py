@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, 
     QLineEdit, QPushButton, QLabel, QMessageBox,
-    QDialog
+    QDialog, QDesktopWidget
 )
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtCore import Qt, pyqtSignal
@@ -24,6 +24,7 @@ class UserManagement:
         self.users[username] = password
         return True
 
+
 class LoginWindow(QWidget):
     """ 登录界面 """
     login_successful = pyqtSignal()
@@ -35,7 +36,7 @@ class LoginWindow(QWidget):
         self.main_window = main_window
 
         self.setWindowTitle("登录界面")
-        self.setGeometry(100, 100, 360, 300)
+        self.setGeometry(0, 0, 360, 300)
         self.setWindowIcon(QIcon('Software/assets/login.png'))
 
         # 创建图片标签
@@ -84,6 +85,16 @@ class LoginWindow(QWidget):
         login_button.clicked.connect(self.accept)
         cancel_button.clicked.connect(self.reject)
 
+        # 居中显示窗口
+        self.center_on_screen()
+
+    def center_on_screen(self):
+        """将窗口居中显示"""
+        screen_geometry = QDesktopWidget().availableGeometry()
+        x = int((screen_geometry.width() - self.width()) / 2)
+        y = int((screen_geometry.height() - self.height()) / 2)
+        self.move(x, y)
+
     def accept(self):
         """ 登录按钮逻辑 """
         username = self.username_input.text()
@@ -114,7 +125,7 @@ class RegisterWindow(QWidget):
         self.main_window = main_window
 
         self.setWindowTitle("注册界面")
-        self.setGeometry(100, 100, 360, 320)
+        self.setGeometry(0, 0, 360, 320)
         self.setWindowIcon(QIcon('Software/assets/register.png'))
 
         # 创建图片标签
@@ -168,6 +179,16 @@ class RegisterWindow(QWidget):
         register_button.clicked.connect(self.register)
         cancel_button.clicked.connect(self.reject)
 
+        # 居中显示窗口
+        self.center_on_screen()
+
+    def center_on_screen(self):
+        """将窗口居中显示"""
+        screen_geometry = QDesktopWidget().availableGeometry()
+        x = int((screen_geometry.width() - self.width()) / 2)
+        y = int((screen_geometry.height() - self.height()) / 2)
+        self.move(x, y)
+
     def register(self):
         """ 注册按钮逻辑 """
         username = self.username_input.text()
@@ -195,6 +216,7 @@ class RegisterWindow(QWidget):
         self.close()
         self.registration_closed.emit()
 
+
 class RegisterLoginApp(QWidget):
     """ 欢迎界面 """
     def __init__(self):
@@ -215,7 +237,7 @@ class RegisterLoginApp(QWidget):
 
         # 设置窗口标题和大小
         self.setWindowTitle("欢迎")
-        self.setGeometry(100, 100, 640, 480)
+        self.setGeometry(0, 0, 640, 480)
         self.setWindowIcon(QIcon('Software/assets/logo.png'))
 
         # 创建主布局
@@ -244,6 +266,16 @@ class RegisterLoginApp(QWidget):
 
         # 设置主窗口的布局
         self.setLayout(main_layout)
+
+        # 居中显示窗口
+        self.center_on_screen()
+
+    def center_on_screen(self):
+        """将窗口居中显示"""
+        screen_geometry = QDesktopWidget().availableGeometry()
+        x = int((screen_geometry.width() - self.width()) / 2)
+        y = int((screen_geometry.height() - self.height()) / 2)
+        self.move(x, y)
 
     def show_login_window(self):
         """ 显示登录界面 """

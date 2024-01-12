@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, 
     QPushButton, QFileDialog, QMessageBox, QSpacerItem,
-    QSizePolicy, QMainWindow
+    QSizePolicy, QDesktopWidget
 )
 from PyQt5.QtGui import QPixmap, QIcon
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -47,7 +47,7 @@ class IntegratedApp(QWidget):
 
         # 设置窗口标题和大小
         self.setWindowTitle("三维人脸分析")
-        self.setGeometry(100, 100, 1440, 960)
+        self.setGeometry(0, 0, 1440, 960)
         self.setWindowIcon(QIcon('Software/assets/logo.png'))
 
         # 创建主布局
@@ -97,6 +97,16 @@ class IntegratedApp(QWidget):
 
         # 设置主窗口的布局
         self.setLayout(main_layout)
+
+        # 居中显示窗口
+        self.center_on_screen()
+
+    def center_on_screen(self):
+        """ 将窗口居中显示 """
+        screen_geometry = QDesktopWidget().availableGeometry()
+        x = int((screen_geometry.width() - self.width()) / 2)
+        y = int((screen_geometry.height() - self.height()) / 2)
+        self.move(x, y)
 
     def reconstruct_3d(self):
         """ 三维重建 """
