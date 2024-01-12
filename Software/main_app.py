@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import (
     QPushButton, QFileDialog, QMessageBox, QSpacerItem,
     QSizePolicy, QMainWindow
 )
+from PyQt5.QtGui import QPixmap, QIcon
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from model import ModelViewer
 from camera import CameraApp
@@ -47,6 +48,7 @@ class IntegratedApp(QWidget):
         # 设置窗口标题和大小
         self.setWindowTitle("三维人脸分析")
         self.setGeometry(100, 100, 1440, 960)
+        self.setWindowIcon(QIcon('Software/assets/logo.png'))
 
         # 创建主布局
         main_layout = QHBoxLayout()

@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (
     QLineEdit, QPushButton, QLabel, QMessageBox,
     QDialog
 )
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtCore import Qt, pyqtSignal
 from main_app import IntegratedApp          # 导入主界面
 
@@ -27,6 +27,7 @@ class UserManagement:
 class LoginWindow(QWidget):
     """ 登录界面 """
     login_successful = pyqtSignal()
+    login_closed = pyqtSignal()
 
     def __init__(self, user_management, main_window):
         super().__init__()
@@ -34,7 +35,8 @@ class LoginWindow(QWidget):
         self.main_window = main_window
 
         self.setWindowTitle("登录界面")
-        self.setGeometry(100, 100, 360, 300)  # 增加高度以适应图片
+        self.setGeometry(100, 100, 360, 300)
+        self.setWindowIcon(QIcon('Software/assets/login.png'))
 
         # 创建图片标签
         image_label = QLabel(self)
@@ -71,7 +73,7 @@ class LoginWindow(QWidget):
         # 添加按钮
         button_layout = QHBoxLayout()
         login_button = QPushButton("登录")
-        cancel_button = QPushButton("取消")
+        cancel_button = QPushButton("返回")
         button_layout.addWidget(login_button)
         button_layout.addWidget(cancel_button)
 
@@ -98,10 +100,13 @@ class LoginWindow(QWidget):
     def reject(self):
         """ 取消按钮逻辑 """
         self.close()
+        self.login_closed.emit()       
+
 
 class RegisterWindow(QWidget):
     """ 注册界面 """
     registration_successful = pyqtSignal()
+    registration_closed = pyqtSignal()
 
     def __init__(self, user_management, main_window):
         super().__init__()
@@ -109,7 +114,8 @@ class RegisterWindow(QWidget):
         self.main_window = main_window
 
         self.setWindowTitle("注册界面")
-        self.setGeometry(100, 100, 360, 320)  # 增加高度以适应图片
+        self.setGeometry(100, 100, 360, 320)
+        self.setWindowIcon(QIcon('Software/assets/register.png'))
 
         # 创建图片标签
         image_label = QLabel(self)
@@ -152,7 +158,7 @@ class RegisterWindow(QWidget):
         # 添加注册，取消按钮
         button_layout = QHBoxLayout()
         register_button = QPushButton("注册", self)
-        cancel_button = QPushButton("取消", self)
+        cancel_button = QPushButton("返回", self)
         button_layout.addWidget(register_button)
         button_layout.addWidget(cancel_button)
 
@@ -167,6 +173,10 @@ class RegisterWindow(QWidget):
         username = self.username_input.text()
         password = self.password_input.text()
         confirm_password = self.confirm_password_input.text()
+
+        if not username or not password or not confirm_password:
+            QMessageBox.warning(self, "警告", "用户名和密码不能为空。")
+            return
 
         if password != confirm_password:
             QMessageBox.warning(self, "警告", "密码不一致，请重新输入。")
@@ -183,8 +193,10 @@ class RegisterWindow(QWidget):
     def reject(self):
         """ 取消按钮逻辑 """
         self.close()
+        self.registration_closed.emit()
 
 class RegisterLoginApp(QWidget):
+    """ 欢迎界面 """
     def __init__(self):
         super().__init__()
         self.user_management = UserManagement()
@@ -193,13 +205,18 @@ class RegisterLoginApp(QWidget):
         self.login_window = LoginWindow(self.user_management, self.main_window)
         self.register_window = RegisterWindow(self.user_management, self.main_window)
 
-        # 将成功登录的信号连接到一个关闭主窗口的方法
-        self.login_window.login_successful.connect(self.close_main_window)
-        self.register_window.registration_successful.connect(self.close_main_window)
+        # 将成功 登录/注册 的信号连接到关闭主窗口的方法
+        self.login_window.login_successful.connect(self.close)
+        self.register_window.registration_successful.connect(self.close)
+
+        # 将取消 登录/注册 的信号连接到显示主窗口的方法
+        self.login_window.login_closed.connect(self.show)
+        self.register_window.registration_closed.connect(self.show)
 
         # 设置窗口标题和大小
-        self.setWindowTitle("欢迎!")
+        self.setWindowTitle("欢迎")
         self.setGeometry(100, 100, 640, 480)
+        self.setWindowIcon(QIcon('Software/assets/logo.png'))
 
         # 创建主布局
         main_layout = QVBoxLayout()
@@ -231,14 +248,12 @@ class RegisterLoginApp(QWidget):
     def show_login_window(self):
         """ 显示登录界面 """
         self.login_window.show()
+        self.hide()
 
     def show_register_window(self):
         """ 显示注册界面 """
         self.register_window.show()
-
-    def close_main_window(self):
-        """ 关闭初始界面 """
-        self.close()
+        self.hide()
 
 
 if __name__ == '__main__':
