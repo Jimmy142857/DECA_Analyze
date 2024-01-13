@@ -6,23 +6,55 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtCore import Qt, pyqtSignal
 from main_app import IntegratedApp          # 导入主界面
+import sqlite3                              # 导入SQLite数据库
+import hashlib
 
 
 class UserManagement:
     """ 用户管理逻辑 """
-    def __init__(self):
-        self.users = {'jimmy': '123456', 'joy': '123456'}
+    def __init__(self, db_path='users.db'):
+        # 连接到数据库，如果不存在则创建
+        self.conn = sqlite3.connect(db_path)
+        self.create_user_table()
+
+    def create_user_table(self):
+        """ 创建用户表 """
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL
+            )
+        ''')
+        self.conn.commit()
+
+    def hash_password(self, password):
+        """ 使用 SHA-256 哈希密码 """
+        return hashlib.sha256(password.encode()).hexdigest()
 
     def authenticate(self, username, password):
         """ 用户认证 """
-        return username in self.users and self.users[username] == password
+        hashed_password = self.hash_password(password)
+        cursor = self.conn.cursor()
+        cursor.execute('SELECT * FROM users WHERE username=? AND password_hash=?', (username, hashed_password))
+        return cursor.fetchone() is not None
 
     def register(self, username, password):
         """ 用户注册 """
-        if username in self.users:
+        hashed_password = self.hash_password(password)
+        cursor = self.conn.cursor()
+        try:
+            cursor.execute('INSERT INTO users (username, password_hash) VALUES (?, ?)', (username, hashed_password))
+            self.conn.commit()
+            return True
+        except sqlite3.IntegrityError:
+            # 用户名重复
             return False
-        self.users[username] = password
-        return True
+
+    def close(self):
+        """ 关闭数据库连接 """
+        self.conn.close()
 
 
 class LoginWindow(QWidget):
@@ -82,7 +114,7 @@ class LoginWindow(QWidget):
         layout.addLayout(button_layout)
 
         # 连接按钮的点击事件
-        login_button.clicked.connect(self.accept)
+        login_button.clicked.connect(self.login)
         cancel_button.clicked.connect(self.reject)
 
         # 居中显示窗口
@@ -95,10 +127,14 @@ class LoginWindow(QWidget):
         y = int((screen_geometry.height() - self.height()) / 2)
         self.move(x, y)
 
-    def accept(self):
+    def login(self):
         """ 登录按钮逻辑 """
         username = self.username_input.text()
         password = self.password_input.text()
+
+        if not username or not password:
+            QMessageBox.warning(self, "警告", "用户名和密码不能为空。")
+            return
 
         if self.user_management.authenticate(username, password):
             QMessageBox.information(self, "提示", "登录成功")
@@ -109,7 +145,7 @@ class LoginWindow(QWidget):
             QMessageBox.warning(self, "警告", "用户名或密码错误")
 
     def reject(self):
-        """ 取消按钮逻辑 """
+        """ 返回按钮逻辑 """
         self.close()
         self.login_closed.emit()       
 
@@ -212,7 +248,7 @@ class RegisterWindow(QWidget):
             QMessageBox.warning(self, "警告", "用户名已存在，请选择其他用户名。")
 
     def reject(self):
-        """ 取消按钮逻辑 """
+        """ 返回按钮逻辑 """
         self.close()
         self.registration_closed.emit()
 
