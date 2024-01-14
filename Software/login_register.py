@@ -7,7 +7,7 @@ from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtCore import Qt, pyqtSignal
 from main_app import IntegratedApp          # 导入主界面
 import sqlite3                              # 导入SQLite数据库
-import hashlib
+import bcrypt                               # 加密算法
 
 
 class UserManagement:
@@ -30,15 +30,19 @@ class UserManagement:
         self.conn.commit()
 
     def hash_password(self, password):
-        """ 使用 SHA-256 哈希密码 """
-        return hashlib.sha256(password.encode()).hexdigest()
+        """ 使用 bcrypt 哈希密码 """
+        hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+        return hashed_password.decode('utf-8')
 
     def authenticate(self, username, password):
         """ 用户认证 """
-        hashed_password = self.hash_password(password)
         cursor = self.conn.cursor()
-        cursor.execute('SELECT * FROM users WHERE username=? AND password_hash=?', (username, hashed_password))
-        return cursor.fetchone() is not None
+        cursor.execute('SELECT * FROM users WHERE username=?', (username,))
+        user = cursor.fetchone()
+        if user:
+            stored_password_hash = user[2]
+            return bcrypt.checkpw(password.encode(), stored_password_hash.encode())
+        return False
 
     def register(self, username, password):
         """ 用户注册 """
@@ -73,7 +77,7 @@ class LoginWindow(QWidget):
 
         # 创建图片标签
         image_label = QLabel(self)
-        pixmap = QPixmap("Software/assets/login.png")  # 替换为你的图片路径
+        pixmap = QPixmap("Software/assets/login.png")
         image_label.setPixmap(pixmap)
         image_label.setAlignment(Qt.AlignCenter)
 
@@ -166,7 +170,7 @@ class RegisterWindow(QWidget):
 
         # 创建图片标签
         image_label = QLabel(self)
-        pixmap = QPixmap("Software/assets/register.png")  # 替换为你的图片路径
+        pixmap = QPixmap("Software/assets/register.png")
         image_label.setPixmap(pixmap)
         image_label.setAlignment(Qt.AlignCenter)
 
