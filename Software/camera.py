@@ -174,6 +174,9 @@ class CameraApp(QWidget):
         # 重置建模输入路径
         self.input_path = None
 
+        # 启用保存按钮
+        self.save_button.setEnabled(True)
+
     def update_camera_image(self):
         """ 刷新相机界面 """
         # 检查相机是否可用
@@ -321,6 +324,9 @@ class CameraApp(QWidget):
             self.captured_image = image
             # 更新重建输入路径
             self.input_path = file_path
+
+            # 禁用保存按钮
+            self.save_button.setEnabled(False)
 
     def detect_faces(self, frame):
         """ 在图像中检测人脸 """
