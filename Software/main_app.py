@@ -5,9 +5,9 @@ from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, 
     QPushButton, QFileDialog, QMessageBox, QSpacerItem,
-    QSizePolicy, QDesktopWidget
+    QSizePolicy, QDesktopWidget, QLabel
 )
-from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtGui import QPixmap, QIcon, QFont
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from model import ModelViewer
 from camera import CameraApp
@@ -40,10 +40,14 @@ class ReconstructionThread(QThread):
 
 class IntegratedApp(QWidget):
     """ 主界面 """
-    def __init__(self):
+    def __init__(self, user_management = None):
         super().__init__()
         # 添加重建成员变量
         self.reconstruction_thread = None
+
+        # 用户管理成员变量
+        self.user_management = user_management
+        self.current_user = None
 
         # 设置窗口标题和大小
         self.setWindowTitle("三维人脸分析")
@@ -69,6 +73,16 @@ class IntegratedApp(QWidget):
 
         # 创建按钮布局
         button_layout = QVBoxLayout()
+
+        # 在按钮上方添加一个标签显示当前用户
+        self.user_label = QLabel(f"欢迎你,管理员!")
+        button_layout.addWidget(self.user_label, alignment=Qt.AlignTop | Qt.AlignHCenter)
+
+        # 设置标签字体
+        font = QFont()
+        font.setPointSize(16)
+        font.setBold(True)
+        self.user_label.setFont(font)
 
         # 创建一个弹簧，使得按钮位于两个模块中间
         spacer = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
@@ -147,6 +161,21 @@ class IntegratedApp(QWidget):
             obj_path = os.path.join(output_folder, file_name, file_name + '.obj')  # 糙模型路径
             self.model_viewer.loadModel(obj_path)  # 加载模型
             QMessageBox.information(self, "成功", "三维重建完成!")
+
+    def update_user_label(self):
+        """ 更新当前用户标签 """
+        self.current_user = self.user_management.get_current_user()
+        self.user_label.setText(f"欢迎你,{self.current_user}!")
+
+    def login_successful_handler(self):
+        """ 登录成功处理 """
+        self.update_user_label()
+        self.camera_app.username = self.current_user
+
+    def registration_successful_handler(self):
+        """ 注册成功处理 """
+        self.update_user_label()
+        self.camera_app.username = self.current_user
 
 
 if __name__ == '__main__':

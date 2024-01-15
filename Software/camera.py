@@ -1,4 +1,4 @@
-import sys, cv2, os
+import sys, cv2, os, datetime
 import face_alignment
 import numpy as np
 from PyQt5.QtWidgets import (
@@ -130,6 +130,12 @@ class CameraApp(QWidget):
 
         # 初始化建模输入图片路径
         self.input_path = None
+
+        # 初始化已拍摄照片
+        self.captured_image = None
+
+        # 初始化当前用户
+        self.username = "adminstrator"
 
         # 设置布局
         self.setLayout(main_layout)
@@ -266,14 +272,22 @@ class CameraApp(QWidget):
 
     def save_image(self):
         """ 保存图片 """
-        # 弹出文件保存对话框
+        if self.captured_image is None or not self.captured_image.any():
+            QMessageBox.warning(self, "警告", "请先拍摄照片!")
+            return
+        
+        # 弹出文件夹选择对话框
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        folder_path, _ = QFileDialog.getSaveFileName(self, "请选择保存位置", "", "JPEG 图像 (*.jpg);;所有文件 (*)", options=options)
+        folder_path = QFileDialog.getExistingDirectory(self, "请选择保存文件夹", options=options)
 
         # 如果用户选择了保存位置，保存图像
         if folder_path:
-            file_path = folder_path + ".jpg"
+            # 获取当前时间
+            current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            # 使用用户名和当前时间生成文件名
+            file_name = f"{self.username}_{current_time}"
+            file_path = os.path.normpath(os.path.join(folder_path, file_name + ".jpg"))
             cv2.imwrite(file_path, cv2.cvtColor(self.captured_image, cv2.COLOR_RGB2BGR))
             QMessageBox.information(self, "成功", f'图像已保存到：{file_path}')
             # 更新重建输入路径

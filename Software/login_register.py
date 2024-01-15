@@ -5,60 +5,8 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtCore import Qt, pyqtSignal
-from main_app import IntegratedApp          # 导入主界面
-import sqlite3                              # 导入SQLite数据库
-import bcrypt                               # 加密算法
-
-
-class UserManagement:
-    """ 用户管理逻辑 """
-    def __init__(self, db_path='users.db'):
-        # 连接到数据库，如果不存在则创建
-        self.conn = sqlite3.connect(db_path)
-        self.create_user_table()
-
-    def create_user_table(self):
-        """ 创建用户表 """
-        cursor = self.conn.cursor()
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                password_hash TEXT NOT NULL
-            )
-        ''')
-        self.conn.commit()
-
-    def hash_password(self, password):
-        """ 使用 bcrypt 哈希密码 """
-        hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
-        return hashed_password.decode('utf-8')
-
-    def authenticate(self, username, password):
-        """ 用户认证 """
-        cursor = self.conn.cursor()
-        cursor.execute('SELECT * FROM users WHERE username=?', (username,))
-        user = cursor.fetchone()
-        if user:
-            stored_password_hash = user[2]
-            return bcrypt.checkpw(password.encode(), stored_password_hash.encode())
-        return False
-
-    def register(self, username, password):
-        """ 用户注册 """
-        hashed_password = self.hash_password(password)
-        cursor = self.conn.cursor()
-        try:
-            cursor.execute('INSERT INTO users (username, password_hash) VALUES (?, ?)', (username, hashed_password))
-            self.conn.commit()
-            return True
-        except sqlite3.IntegrityError:
-            # 用户名重复
-            return False
-
-    def close(self):
-        """ 关闭数据库连接 """
-        self.conn.close()
+from main_app import IntegratedApp               # 导入主界面
+from user_management import UserManagement       # 导入用户管理
 
 
 class LoginWindow(QWidget):
@@ -142,8 +90,9 @@ class LoginWindow(QWidget):
 
         if self.user_management.authenticate(username, password):
             QMessageBox.information(self, "提示", "登录成功")
+            self.user_management.set_current_user(username)         # 设置当前用户
             self.close()
-            self.login_successful.emit()    # 成功登录发送信号
+            self.login_successful.emit()                            # 成功登录发送信号
             self.main_window.show()
         else:
             QMessageBox.warning(self, "警告", "用户名或密码错误")
@@ -245,8 +194,9 @@ class RegisterWindow(QWidget):
 
         if self.user_management.register(username, password):
             QMessageBox.information(self, "提示", "注册成功")
+            self.user_management.set_current_user(username)         # 设置当前用户
             self.close()
-            self.registration_successful.emit()    # 成功注册发送信号
+            self.registration_successful.emit()                     # 成功注册发送信号
             self.main_window.show()
         else:
             QMessageBox.warning(self, "警告", "用户名已存在，请选择其他用户名。")
@@ -262,14 +212,16 @@ class RegisterLoginApp(QWidget):
     def __init__(self):
         super().__init__()
         self.user_management = UserManagement()
-        self.main_window = IntegratedApp()
+        self.main_window = IntegratedApp(self.user_management)
 
         self.login_window = LoginWindow(self.user_management, self.main_window)
         self.register_window = RegisterWindow(self.user_management, self.main_window)
 
-        # 将成功 登录/注册 的信号连接到关闭主窗口的方法
+        # 将成功 登录/注册 的信号连接到 关闭主窗口/更新用户标签 的方法
         self.login_window.login_successful.connect(self.close)
+        self.login_window.login_successful.connect(self.main_window.login_successful_handler)
         self.register_window.registration_successful.connect(self.close)
+        self.register_window.registration_successful.connect(self.main_window.registration_successful_handler)
 
         # 将取消 登录/注册 的信号连接到显示主窗口的方法
         self.login_window.login_closed.connect(self.show)
