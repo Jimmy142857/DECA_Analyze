@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, 
     QPushButton, QFileDialog, QMessageBox, QSpacerItem,
-    QSizePolicy, QDesktopWidget, QLabel
+    QSizePolicy, QDesktopWidget, QLabel, QDialog
 )
 from PyQt5.QtGui import QPixmap, QIcon, QFont
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -37,6 +37,28 @@ class ReconstructionThread(QThread):
         # 通知主线程操作完成
         self.finished.emit("", self.output_folder, self.file_name)
         
+class UserInfoPopup(QDialog):
+    """用户信息弹窗"""
+    def __init__(self, user_management):
+        super().__init__()
+
+        # 获取用户信息
+        current_user = user_management.get_current_user_info()
+
+        # 创建标签显示用户信息
+        username_label = QLabel(f"用户名: {current_user['username']}")
+        gender_age_label = QLabel(f"性别: {current_user['gender']}   |  年龄: {current_user['age']}")
+        registration_info_label = QLabel(f"注册ID: {current_user['id']}  |  注册时间: {current_user['created_at']}")
+
+        # 创建布局
+        layout = QVBoxLayout()
+        layout.addWidget(username_label)
+        layout.addWidget(gender_age_label)
+        layout.addWidget(registration_info_label)
+
+        self.setLayout(layout)
+        self.setWindowTitle("用户信息")
+        self.setWindowIcon(QIcon('Software/assets/logo.png'))
 
 class IntegratedApp(QWidget):
     """ 主界面 """
@@ -78,7 +100,7 @@ class IntegratedApp(QWidget):
         self.user_label = QLabel(f"欢迎你,管理员!")
         button_layout.addWidget(self.user_label, alignment=Qt.AlignTop | Qt.AlignHCenter)
 
-        # 设置标签字体
+        # 设置标签、按钮的字体
         font = QFont()
         font.setPointSize(16)
         font.setBold(True)
@@ -91,14 +113,21 @@ class IntegratedApp(QWidget):
         # 中间添加一个按钮
         self.reconstruct_button = QPushButton("三维重建", self)
         self.reconstruct_button.clicked.connect(self.reconstruct_3d)
+        self.reconstruct_button.setFont(font)                           # 按钮字体设置
 
-        # 按钮字体设置
-        font = self.reconstruct_button.font()
-        font.setPointSize(16)               # 设置字体大小为16
-        font.setBold(True)                  # 设置字体加粗
-        self.reconstruct_button.setFont(font)
+        # 创建用户信息按钮
+        self.user_info_button = QPushButton("用户信息", self)
+        self.user_info_button.clicked.connect(self.show_user_info)
+        self.user_info_button.setFont(font)
+
+        # 创建用户信息按钮
+        self.user_logout_button = QPushButton("退出", self)
+        self.user_logout_button.clicked.connect(self.logout)
+        self.user_logout_button.setFont(font)
 
         button_layout.addWidget(self.reconstruct_button)
+        button_layout.addWidget(self.user_info_button)
+        button_layout.addWidget(self.user_logout_button)
 
         # 创建一个弹簧，使得按钮位于两个模块中间
         spacer = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
@@ -177,6 +206,17 @@ class IntegratedApp(QWidget):
         self.update_user_label()
         self.camera_app.username = self.current_user
 
+    def show_user_info(self):
+        """ 显示用户信息弹窗 """
+        if self.user_management:
+            user_info_popup = UserInfoPopup(self.user_management)
+            user_info_popup.exec_()
+
+    def logout(self):
+        """ 退出逻辑 """
+        if self.user_management:
+            self.user_management.close()        # 关闭数据库连接
+        self.close()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

@@ -17,7 +17,10 @@ class UserManagement:
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
-                password_hash TEXT NOT NULL
+                password_hash TEXT NOT NULL,
+                age INTEGER,
+                gender TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
         self.conn.commit()
@@ -37,12 +40,12 @@ class UserManagement:
             return bcrypt.checkpw(password.encode(), stored_password_hash.encode())
         return False
 
-    def register(self, username, password):
+    def register(self, username, password, age, gender):
         """ 用户注册 """
         hashed_password = self.hash_password(password)
         cursor = self.conn.cursor()
         try:
-            cursor.execute('INSERT INTO users (username, password_hash) VALUES (?, ?)', (username, hashed_password))
+            cursor.execute('INSERT INTO users (username, password_hash, age, gender) VALUES (?, ?, ?, ?)', (username, hashed_password, age, gender))
             self.conn.commit()
             return True
         except sqlite3.IntegrityError:
@@ -55,8 +58,25 @@ class UserManagement:
         print(f"当前用户设置为：{self.current_user}")
 
     def get_current_user(self):
-        """ 返回当前用户 """
+        """ 返回当前用户名 """
         return self.current_user
+
+    def get_current_user_info(self):
+        """ 获取当前用户的详细信息 """
+        cursor = self.conn.cursor()
+        cursor.execute('SELECT * FROM users WHERE username=?', (self.current_user,))
+        user = cursor.fetchone()
+        if user:
+            user_info = {
+                'id': user[0],
+                'username': user[1],
+                'password_hash': user[2],
+                'age': user[3],
+                'gender': user[4],
+                'created_at': user[5]
+            }
+            return user_info
+        return None
 
     def close(self):
         """ 关闭数据库连接 """

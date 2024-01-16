@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, 
     QLineEdit, QPushButton, QLabel, QMessageBox,
-    QDialog, QDesktopWidget
+    QDialog, QDesktopWidget, QComboBox
 )
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtCore import Qt, pyqtSignal
@@ -123,26 +123,43 @@ class RegisterWindow(QWidget):
         image_label.setPixmap(pixmap)
         image_label.setAlignment(Qt.AlignCenter)
 
-        # 创建用户名、密码和确认密码的水平布局
+        # 创建用户名、年龄、性别、密码和确认密码的水平布局
         username_layout = QHBoxLayout()
+        userage_layout = QHBoxLayout()
+        usergender_layout = QHBoxLayout()
         password_layout = QHBoxLayout()
         confirm_password_layout = QHBoxLayout()
 
-        # 添加用户名、密码和确认密码标签
+        # 添加用户名、年龄、性别、密码和确认密码的标签
         username_layout.addWidget(QLabel("用户名:"))
+        userage_layout.addWidget(QLabel("年龄:"))
+        usergender_layout.addWidget(QLabel("性别:"))
         password_layout.addWidget(QLabel("密码:"))
         confirm_password_layout.addWidget(QLabel("确认密码:"))
 
-        # 添加用户名、密码和确认密码输入框
+        # 添加用户名、密码和确认密码的输入框
         self.username_input = QLineEdit(self)
         self.password_input = QLineEdit(self)
         self.confirm_password_input = QLineEdit(self)
         self.password_input.setEchoMode(QLineEdit.Password)
         self.confirm_password_input.setEchoMode(QLineEdit.Password)
 
+        # 使用QComboBox进行用户年龄、性别输入
+        self.age_input = QComboBox(self)
+        self.age_input.addItems([str(i) for i in range(1, 101)])
+        self.gender_input = QComboBox(self)
+        self.gender_input.addItems(["男", "女"])
+
         username_layout.addWidget(self.username_input)
+        userage_layout.addWidget(self.age_input)
+        usergender_layout.addWidget(self.gender_input)
         password_layout.addWidget(self.password_input)
         confirm_password_layout.addWidget(self.confirm_password_input)
+
+        # 添加用户信息水平布局
+        userinfo_layout = QHBoxLayout()
+        userinfo_layout.addLayout(userage_layout)
+        userinfo_layout.addLayout(usergender_layout)
 
         # 将水平布局嵌套到垂直布局中
         layout = QVBoxLayout(self)
@@ -150,12 +167,13 @@ class RegisterWindow(QWidget):
         # 添加图片标签到垂直布局
         layout.addWidget(image_label)
 
-        # 添加用户名、密码和确认密码的水平布局
+        # 添加用户信息、密码和确认密码的水平布局
         layout.addLayout(username_layout)
+        layout.addLayout(userinfo_layout)
         layout.addLayout(password_layout)
         layout.addLayout(confirm_password_layout)
 
-        # 添加注册，取消按钮
+        # 添加注册，返回按钮
         button_layout = QHBoxLayout()
         register_button = QPushButton("注册", self)
         cancel_button = QPushButton("返回", self)
@@ -183,6 +201,8 @@ class RegisterWindow(QWidget):
         username = self.username_input.text()
         password = self.password_input.text()
         confirm_password = self.confirm_password_input.text()
+        age = self.age_input.currentText()
+        gender = self.gender_input.currentText()
 
         if not username or not password or not confirm_password:
             QMessageBox.warning(self, "警告", "用户名和密码不能为空。")
@@ -192,7 +212,7 @@ class RegisterWindow(QWidget):
             QMessageBox.warning(self, "警告", "密码不一致，请重新输入。")
             return
 
-        if self.user_management.register(username, password):
+        if self.user_management.register(username, password, age, gender):
             QMessageBox.information(self, "提示", "注册成功")
             self.user_management.set_current_user(username)         # 设置当前用户
             self.close()
