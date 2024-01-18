@@ -61,6 +61,7 @@ class ModelViewer(QWidget):
         self.fileNameActor.GetTextProperty().SetFontSize(30)               # 设置文本字体大小
         self.fileNameActor.GetTextProperty().SetColor(1, 1, 1)             # 设置文本标签颜色为白色
         self.fileNameActor.GetTextProperty().SetJustificationToCentered()  # 设置文本对齐方式为居中
+        self.fileNameActor.GetTextProperty().SetFontFamilyToArial()        # 设置字体为Arial
 
         # 连接渲染窗口大小变化事件
         self.vtkWidget.GetRenderWindow().AddObserver(vtk.vtkCommand.ModifiedEvent, self.onRenderWindowModified)
@@ -103,12 +104,15 @@ class ModelViewer(QWidget):
         os.chdir(obj_directory)
 
         # 模型文件名
-        model_name = file_path.split(os.path.sep)[-1][:-4]
+        model_name = os.path.splitext(os.path.basename(file_path))[0]
 
         # mtl文件名
         mtl_path = file_path[:-3] + "mtl"
 
-        if os.path.exists(mtl_path):
+        # 贴图文件名
+        texture_path = file_path[:-3] + "png"
+
+        if os.path.exists(mtl_path) and os.path.exists(texture_path):
             # 使用vtkOBJImporter读取包含材质信息的.obj文件
             importer = vtk.vtkOBJImporter()
             importer.SetFileName(file_path)
