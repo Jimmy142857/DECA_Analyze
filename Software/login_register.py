@@ -243,6 +243,7 @@ class RegisterWindow(QWidget):
         self.age_input.setCurrentIndex(0)       # 将年龄输入框重置为默认值（例如第一个项目）
         self.gender_input.setCurrentIndex(0)    # 将性别输入框重置为默认值（例如第一个项目）
 
+
 class RegisterLoginApp(QWidget):
     """ 欢迎界面 """
     def __init__(self):
