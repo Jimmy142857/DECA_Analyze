@@ -1,6 +1,7 @@
 import sys, cv2, os, datetime
 import face_alignment
 import numpy as np
+from pathlib import Path
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QFileDialog, QMessageBox
@@ -291,10 +292,14 @@ class CameraApp(QWidget):
             # 使用用户名和当前时间生成文件名
             file_name = f"{self.username}_{current_time}"
             file_path = os.path.normpath(os.path.join(folder_path, file_name + ".jpg"))
-            cv2.imwrite(file_path, cv2.cvtColor(self.captured_image, cv2.COLOR_RGB2BGR))
-            QMessageBox.information(self, "成功", f'图像已保存到：{file_path}')
-            # 更新重建输入路径
-            self.input_path = file_path
+            # 保存文件
+            try:                
+                cv2.imencode('.jpg', cv2.cvtColor(self.captured_image, cv2.COLOR_RGB2BGR))[1].tofile(file_path)   # 兼容中文文件名
+                QMessageBox.information(self, "成功", f'图像已保存到：{file_path}')
+                # 更新重建输入路径
+                self.input_path = file_path
+            except Exception as e:
+                QMessageBox.warning(self, "警告", f"无法保存图像：{e}")
 
     def select_photo(self):
         """ 选择照片 """
@@ -302,31 +307,36 @@ class CameraApp(QWidget):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         file_path, _ = QFileDialog.getOpenFileName(self, "选择照片", "", "图片文件 (*.png *.jpg *.bmp);;所有文件 (*)", options=options)
-
+        
         # 如果用户选择了照片，显示在图片标签中
         if file_path:
+            # 使用 pathlib 处理文件路径
+            file_path = str(Path(file_path))
             # 读取照片
-            image = cv2.cvtColor(cv2.imread(file_path), cv2.COLOR_BGR2RGB)
+            try:
+                # 兼容中文路径图片
+                image = cv2.cvtColor(cv2.imdecode(np.fromfile(file_path, dtype=np.uint8), cv2.IMREAD_UNCHANGED), cv2.COLOR_BGR2RGB)
 
-            # 检查图像尺寸，如果太大，进行缩小
-            max_width, max_height = 640, 480
-            if image.shape[0] > max_height or image.shape[1] > max_width:
-                scale_factor = min(max_width / image.shape[1], max_height / image.shape[0])
-                image = cv2.resize(image, (int(image.shape[1] * scale_factor), int(image.shape[0] * scale_factor)))
+                # 检查图像尺寸，如果太大，进行缩小
+                max_width, max_height = 640, 480
+                if image.shape[0] > max_height or image.shape[1] > max_width:
+                    scale_factor = min(max_width / image.shape[1], max_height / image.shape[0])
+                    image = cv2.resize(image, (int(image.shape[1] * scale_factor), int(image.shape[0] * scale_factor)))
 
-            # 将图像转换为Qt图像
-            qt_image = QImage(image.data, image.shape[1], image.shape[0], image.shape[1] * 3, QImage.Format_RGB888)
-            # 显示照片
-            self.photo_label.setPixmap(QPixmap.fromImage(qt_image))
-            QMessageBox.information(self, "成功", f'已选取图像：{file_path}')
+                # 将图像转换为Qt图像
+                qt_image = QImage(image.data, image.shape[1], image.shape[0], image.shape[1] * 3, QImage.Format_RGB888)
+                # 显示照片
+                self.photo_label.setPixmap(QPixmap.fromImage(qt_image))
+                QMessageBox.information(self, "成功", f'已选取图像：{file_path}')
 
-            # 保存已加载的图像
-            self.captured_image = image
-            # 更新重建输入路径
-            self.input_path = file_path
-
-            # 禁用保存按钮
-            self.save_button.setEnabled(False)
+                # 保存已加载的图像
+                self.captured_image = image
+                # 更新重建输入路径
+                self.input_path = file_path
+                # 禁用保存按钮
+                self.save_button.setEnabled(False)
+            except Exception as e:
+                QMessageBox.warning(self, "警告", f"无法读取图像：{e}")
 
     def detect_faces(self, frame):
         """ 在图像中检测人脸 """
