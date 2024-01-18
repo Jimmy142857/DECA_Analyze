@@ -91,6 +91,7 @@ class LoginWindow(QWidget):
         if self.user_management.authenticate(username, password):
             QMessageBox.information(self, "提示", "登录成功")
             self.user_management.set_current_user(username)         # 设置当前用户
+            self.clear_input()
             self.close()
             self.login_successful.emit()                            # 成功登录发送信号
             self.main_window.show()
@@ -99,8 +100,14 @@ class LoginWindow(QWidget):
 
     def reject(self):
         """ 返回按钮逻辑 """
+        self.clear_input()
         self.close()
-        self.login_closed.emit()       
+        self.login_closed.emit()
+
+    def clear_input(self):
+        """ 清空输入框 """   
+        self.username_input.clear()  # 清空用户名输入框
+        self.password_input.clear()  # 清空密码输入框
 
 
 class RegisterWindow(QWidget):
@@ -215,6 +222,7 @@ class RegisterWindow(QWidget):
         if self.user_management.register(username, password, age, gender):
             QMessageBox.information(self, "提示", "注册成功")
             self.user_management.set_current_user(username)         # 设置当前用户
+            self.clear_input()
             self.close()
             self.registration_successful.emit()                     # 成功注册发送信号
             self.main_window.show()
@@ -223,9 +231,17 @@ class RegisterWindow(QWidget):
 
     def reject(self):
         """ 返回按钮逻辑 """
+        self.clear_input()
         self.close()
         self.registration_closed.emit()
 
+    def clear_input(self):
+        """ 清空输入框 """   
+        self.username_input.clear()             # 清空用户名输入框
+        self.password_input.clear()             # 清空密码输入框
+        self.confirm_password_input.clear()     # 清空确认密码输入框
+        self.age_input.setCurrentIndex(0)       # 将年龄输入框重置为默认值（例如第一个项目）
+        self.gender_input.setCurrentIndex(0)    # 将性别输入框重置为默认值（例如第一个项目）
 
 class RegisterLoginApp(QWidget):
     """ 欢迎界面 """
@@ -246,6 +262,9 @@ class RegisterLoginApp(QWidget):
         # 将取消 登录/注册 的信号连接到显示主窗口的方法
         self.login_window.login_closed.connect(self.show)
         self.register_window.registration_closed.connect(self.show)
+
+        # 将主界面用户注销的信号连接到显示主窗口的方法
+        self.main_window.logout_successful.connect(self.show)
 
         # 设置窗口标题和大小
         self.setWindowTitle("欢迎")

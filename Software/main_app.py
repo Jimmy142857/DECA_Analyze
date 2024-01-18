@@ -61,6 +61,8 @@ class UserInfoPopup(QDialog):
         self.setWindowIcon(QIcon('Software/assets/logo.png'))
 
 class IntegratedApp(QWidget):
+    logout_successful = pyqtSignal()                # 用户注销信号
+
     """ 主界面 """
     def __init__(self, user_management = None):
         super().__init__()
@@ -110,7 +112,7 @@ class IntegratedApp(QWidget):
         spacer = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
         button_layout.addItem(spacer)
 
-        # 中间添加一个按钮
+        # 创建三维重建按钮
         self.reconstruct_button = QPushButton("三维重建", self)
         self.reconstruct_button.clicked.connect(self.reconstruct_3d)
         self.reconstruct_button.setFont(font)                           # 按钮字体设置
@@ -120,16 +122,23 @@ class IntegratedApp(QWidget):
         self.user_info_button.clicked.connect(self.show_user_info)
         self.user_info_button.setFont(font)
 
-        # 创建用户信息按钮
-        self.user_logout_button = QPushButton("退出", self)
-        self.user_logout_button.clicked.connect(self.logout)
+        # 创建用户注销按钮
+        self.user_logout_button = QPushButton("用户注销", self)
+        self.user_logout_button.clicked.connect(self.user_logout)
         self.user_logout_button.setFont(font)
+
+        # 创建软件退出按钮
+        self.user_exit_button = QPushButton("退出", self)
+        self.user_exit_button.clicked.connect(self.exit)
+        self.user_exit_button.setFont(font)
 
         button_layout.addWidget(self.reconstruct_button)
         button_layout.addSpacing(40)
         button_layout.addWidget(self.user_info_button)
         button_layout.addSpacing(40)
         button_layout.addWidget(self.user_logout_button)
+        button_layout.addSpacing(40)
+        button_layout.addWidget(self.user_exit_button)
 
         # 创建一个弹簧，使得按钮位于两个模块中间
         spacer = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
@@ -214,8 +223,13 @@ class IntegratedApp(QWidget):
             user_info_popup = UserInfoPopup(self.user_management)
             user_info_popup.exec_()
 
-    def logout(self):
-        """ 退出逻辑 """
+    def user_logout(self):
+        """ 用户注销逻辑 """
+        self.close()
+        self.logout_successful.emit()
+        
+    def exit(self):
+        """ 软件退出逻辑 """
         if self.user_management:
             self.user_management.close()        # 关闭数据库连接
         self.close()
