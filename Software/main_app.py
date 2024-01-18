@@ -225,6 +225,8 @@ class IntegratedApp(QWidget):
 
     def user_logout(self):
         """ 用户注销逻辑 """
+        self.model_viewer.cleanModel()
+        self.camera_app.clear_photo()
         self.close()
         self.logout_successful.emit()
         

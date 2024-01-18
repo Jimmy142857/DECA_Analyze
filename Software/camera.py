@@ -58,7 +58,7 @@ class CameraApp(QWidget):
         # 创建保存按钮
         self.save_button = QPushButton("保存", self)
         self.save_button.setFixedSize(210, 40)
-        self.save_button.clicked.connect(self.save_image)
+        self.save_button.clicked.connect(self.save_photo)
 
         # 创建选择照片按钮
         self.select_button = QPushButton("选择照片", self)
@@ -274,7 +274,7 @@ class CameraApp(QWidget):
         # 显示相机图像
         self.camera_label.setPixmap(QPixmap.fromImage(qt_image))
 
-    def save_image(self):
+    def save_photo(self):
         """ 保存图片 """
         if self.captured_image is None or not self.captured_image.any():
             QMessageBox.warning(self, "警告", "请先拍摄照片!")
@@ -337,6 +337,12 @@ class CameraApp(QWidget):
                 self.save_button.setEnabled(False)
             except Exception as e:
                 QMessageBox.warning(self, "警告", f"无法读取图像：{e}")
+
+    def clear_photo(self):
+        """ 清空已选择照片 """
+        placeholder_pix = QPixmap(640, 480)
+        placeholder_pix.fill(Qt.lightGray)
+        self.photo_label.setPixmap(placeholder_pix)
 
     def detect_faces(self, frame):
         """ 在图像中检测人脸 """
