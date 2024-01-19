@@ -47,14 +47,16 @@ class UserInfoPopup(QDialog):
 
         # 创建标签显示用户信息
         username_label = QLabel(f"用户名: {current_user['username']}")
-        gender_age_label = QLabel(f"性别: {current_user['gender']}   |  年龄: {current_user['age']}")
-        registration_info_label = QLabel(f"注册ID: {current_user['id']}  |  注册时间: {current_user['created_at']}")
+        gender_age_label = QLabel(f"性别: {current_user['gender']}      |   年龄: {current_user['age']}")
+        registration_info_label = QLabel(f"注册ID: {current_user['id']}     |   注册时间: {current_user['created_at']}")
+        login_info_label = QLabel(f"登录次数: {current_user['login_count']}   |   最近登录时间: {current_user['last_login_time']}")
 
         # 创建布局
         layout = QVBoxLayout()
         layout.addWidget(username_label)
         layout.addWidget(gender_age_label)
         layout.addWidget(registration_info_label)
+        layout.addWidget(login_info_label)
 
         self.setLayout(layout)
         self.setWindowTitle("用户信息")

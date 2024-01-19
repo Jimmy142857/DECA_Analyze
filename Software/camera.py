@@ -329,8 +329,6 @@ class CameraApp(QWidget):
                 self.photo_label.setPixmap(QPixmap.fromImage(qt_image))
                 QMessageBox.information(self, "成功", f'已选取图像：{file_path}')
 
-                # 保存已加载的图像
-                self.captured_image = image
                 # 更新重建输入路径
                 self.input_path = file_path
                 # 禁用保存按钮
@@ -339,10 +337,15 @@ class CameraApp(QWidget):
                 QMessageBox.warning(self, "警告", f"无法读取图像：{e}")
 
     def clear_photo(self):
-        """ 清空已选择照片 """
+        """ 重置相机界面 """
         placeholder_pix = QPixmap(640, 480)
         placeholder_pix.fill(Qt.lightGray)
         self.photo_label.setPixmap(placeholder_pix)
+
+        self.captured_image = None
+        self.input_path = None
+        self.save_button.setEnabled(True)
+
 
     def detect_faces(self, frame):
         """ 在图像中检测人脸 """

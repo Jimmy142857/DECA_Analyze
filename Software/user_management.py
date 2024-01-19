@@ -1,6 +1,6 @@
 import sqlite3                              # 导入SQLite数据库
 import bcrypt                               # 加密算法
-
+from datetime import datetime
 
 class UserManagement:
     """ 用户管理逻辑 """
@@ -20,6 +20,8 @@ class UserManagement:
                 password_hash TEXT NOT NULL,
                 age INTEGER,
                 gender TEXT,
+                last_login_time TIMESTAMP,
+                login_count INTEGER DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
@@ -37,7 +39,9 @@ class UserManagement:
         user = cursor.fetchone()
         if user:
             stored_password_hash = user[2]
-            return bcrypt.checkpw(password.encode(), stored_password_hash.encode())
+            if bcrypt.checkpw(password.encode(), stored_password_hash.encode()):
+                self.update_login_info(username)    # 更新最近登录时间和登录次数
+                return True
         return False
 
     def register(self, username, password, age, gender):
@@ -73,10 +77,21 @@ class UserManagement:
                 'password_hash': user[2],
                 'age': user[3],
                 'gender': user[4],
-                'created_at': user[5]
+                'last_login_time':user[5],
+                'login_count':user[6],
+                'created_at': user[7]
             }
             return user_info
         return None
+
+    def update_login_info(self, username):
+        """ 更新最近登录时间和登录次数 """
+        cursor = self.conn.cursor()
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        # 更新最近登录时间和登录次数
+        cursor.execute('UPDATE users SET last_login_time=?, login_count=login_count+1 WHERE username=?', (current_time, username))
+        self.conn.commit()
 
     def close(self):
         """ 关闭数据库连接 """
