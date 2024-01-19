@@ -123,7 +123,7 @@ class IntegratedApp(QWidget):
         self.user_info_button.setFont(font)
 
         # 创建用户注销按钮
-        self.user_logout_button = QPushButton("用户注销", self)
+        self.user_logout_button = QPushButton("用户切换", self)
         self.user_logout_button.clicked.connect(self.user_logout)
         self.user_logout_button.setFont(font)
 
@@ -133,11 +133,11 @@ class IntegratedApp(QWidget):
         self.user_exit_button.setFont(font)
 
         button_layout.addWidget(self.reconstruct_button)
-        button_layout.addSpacing(40)
+        button_layout.addSpacing(60)
         button_layout.addWidget(self.user_info_button)
-        button_layout.addSpacing(40)
+        button_layout.addSpacing(60)
         button_layout.addWidget(self.user_logout_button)
-        button_layout.addSpacing(40)
+        button_layout.addSpacing(60)
         button_layout.addWidget(self.user_exit_button)
 
         # 创建一个弹簧，使得按钮位于两个模块中间
