@@ -346,7 +346,6 @@ class CameraApp(QWidget):
         self.input_path = None
         self.save_button.setEnabled(True)
 
-
     def detect_faces(self, frame):
         """ 在图像中检测人脸 """
         # 将帧转换为灰度图像

@@ -20,9 +20,9 @@ class UserManagement:
                 password_hash TEXT NOT NULL,
                 age INTEGER,
                 gender TEXT,
-                last_login_time TIMESTAMP,
-                login_count INTEGER DEFAULT 0,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                last_login_time TIMESTAMP DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime')),
+                login_count INTEGER DEFAULT 1,
+                created_at TIMESTAMP DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime'))
             )
         ''')
         self.conn.commit()
