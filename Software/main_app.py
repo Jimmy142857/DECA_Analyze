@@ -77,7 +77,7 @@ class IntegratedApp(QWidget):
 
         # 设置窗口标题和大小
         self.setWindowTitle("三维人脸分析")
-        self.setGeometry(0, 0, 1440, 960)
+        self.setGeometry(0, 0, 1500, 1109)
         self.setWindowIcon(QIcon('Software/assets/logo.png'))
 
         # 创建主布局
