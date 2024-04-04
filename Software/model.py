@@ -112,24 +112,35 @@ class ModelViewer(QWidget):
         # 贴图文件名
         texture_path = file_path[:-3] + "png"
 
-        if os.path.exists(mtl_path) and os.path.exists(texture_path):
-            # 使用vtkOBJImporter读取包含材质信息的.obj文件
-            importer = vtk.vtkOBJImporter()
-            importer.SetFileName(file_path)
-            importer.Read()
+        ## 粗糙和精细建模采用不同方式读取 ##
+        # if os.path.exists(mtl_path) and os.path.exists(texture_path):
+        #     # 使用vtkOBJImporter读取包含材质信息的.obj文件
+        #     importer = vtk.vtkOBJImporter()
+        #     importer.SetFileName(file_path)
+        #     importer.Read()
 
-            # 获取导入的Actor
-            actor = importer.GetRenderer().GetActors().GetLastActor()
-        else:
-            # 使用vtkOBJReader读取.obj文件
-            reader = vtk.vtkOBJReader()
-            reader.SetFileName(file_path)
+        #     # 获取导入的Actor
+        #     actor = importer.GetRenderer().GetActors().GetLastActor()
+        # else:
+        #     # 使用vtkOBJReader读取.obj文件
+        #     reader = vtk.vtkOBJReader()
+        #     reader.SetFileName(file_path)
 
-            mapper = vtk.vtkPolyDataMapper()
-            mapper.SetInputConnection(reader.GetOutputPort())
+        #     mapper = vtk.vtkPolyDataMapper()
+        #     mapper.SetInputConnection(reader.GetOutputPort())
 
-            actor = vtk.vtkActor()
-            actor.SetMapper(mapper)
+        #     actor = vtk.vtkActor()
+        #     actor.SetMapper(mapper)
+
+        ## 统一使用不包含贴图的读取方式 ##
+        reader = vtk.vtkOBJReader()
+        reader.SetFileName(file_path)
+
+        mapper = vtk.vtkPolyDataMapper()
+        mapper.SetInputConnection(reader.GetOutputPort())
+
+        actor = vtk.vtkActor()
+        actor.SetMapper(mapper)
 
         # 将模型添加到渲染器中
         self.ren.AddActor(actor)
