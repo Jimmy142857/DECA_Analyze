@@ -1,3 +1,4 @@
+## 运行
 # python==3.10.11
 # numpy==1.23.5
 # vtk==9.2.6
@@ -9,3 +10,7 @@
 
 # scipy chumpy scikit-image opencv-python
 # PyYAML yacs kornia ninja fvcore
+
+## 训练
+# loguru
+# torchfile

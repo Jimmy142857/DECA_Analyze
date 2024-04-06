@@ -9,8 +9,8 @@
 # why:
 # '''
 # pretrained_modelpath: '/ps/scratch/yfeng/Data/Projects-data/DECA-training/training/DECA_SIGGRAPH/pretrain/model.tar'
-output_dir: "/ps/scratch/yfeng/Data/Projects-data/DECA-training/training/DECA_release_version/detail"
-pretrained_modelpath: "/ps/scratch/yfeng/Data/Projects-data/DECA-training/training/DECA_release_version/coarse/model.tar"
+output_dir: "C:\\Users\\Administrator\\Desktop\\DECA_Analyze\\Training\\coarse"
+pretrained_modelpath: "C:\\Users\\Administrator\\Desktop\\DECA_Analyze\\Training\\Pretrain\\model.tar"
 dataset:
   batch_size: 6
   K: 3
