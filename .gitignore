@@ -47,3 +47,6 @@ __pycache__
 cluster_scripts
 internal
 *TestSamples*
+
+## databse
+users.db
